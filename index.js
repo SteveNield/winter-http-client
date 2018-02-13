@@ -1,19 +1,16 @@
 var request = require('superagent'),
     jsonTryParse = require('parse-safejson');
 
-function readResponse(res){
-  return jsonTryParse(res.text);
-}
-
 function handleResponse(err, res, resolve, reject){
-  if(err)
+  var response = jsonTryParse(res.text);
+  if(err || !response.success){
     reject({
       status: (res) ? res.status : 500,
-      res: res !== undefined ? readResponse(res) : null,
-      error: err
+      res: reponse.res,
+      error: err || response.err
     });
-  else{
-    resolve(readResponse(res));
+  } else {
+    resolve(response.res);
   }
 }
 
