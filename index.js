@@ -1,107 +1,74 @@
 var request = require('superagent'),
     jsonTryParse = require('parse-safejson');
 
-function handleResponse(err, res, resolve, reject){
+function _handleResponse(err, res, resolve, reject){
+  if(!res){
+    return reject({
+      status: 500,
+      error: err
+    });
+  }
+
   var response = jsonTryParse(res.text);
-  if(err || !response.success){
+  if(!response.success){
     reject({
-      status: (res) ? res.status : 500,
+      status: res.status,
       res: reponse.res,
-      error: err || response.err
+      error: response.err
     });
   } else {
     resolve(response.res);
   }
 }
 
-function rejectWithError(err, reject){
+function _rejectWithError(err, reject){
   reject({
     err:err,
     status:500
   });
 }
 
-function tokenise(transaction, token){
-  if(!token)
-    return transaction;
-
-  return transaction
-    .set('x-access-token', token);
-}
-
-module.exports.get = function(uri, query, token){
+function _performRequest(method, options){
   return new Promise(function(resolve,reject){
     try{
-      var transaction =
-        request
-          .get(uri)
-          .query(query || {});
+      var transaction = method(options.uri)
+          .query(options.query || {})
+          .send(options.payload);
 
-      transaction = tokenise(transaction, token);
+      if(options.timeout){
+        transaction
+          .timeout({
+            response: options.timeout
+          })
+      }
+
+      if(options.auth && options.auth.token){
+        transaction
+          .set('x-access-token', options.auth.token);
+      }
 
       transaction
         .end(function(err, res){
-          handleResponse(err, res, resolve, reject);
+          _handleResponse(err, res, resolve, reject);
         });
     } catch(err) {
-      rejectWithError(err, reject);
+      _rejectWithError(err, reject);
     }
   });
+}
+
+module.exports.get = function(options){
+  return _performRequest(request.get, options);
 };
 
-module.exports.put = function(uri, payload, token){
-  return new Promise(function(resolve, reject){
-    try{
-      var transaction =
-        request
-          .put(uri)
-          .send(payload);
-
-      transaction = tokenise(transaction, token);
-
-      transaction
-        .end(function(err, res){
-          handleResponse(err, res, resolve, reject);
-        })
-    } catch(err){
-      rejectWithError(err, reject);
-    }
-  })
+module.exports.put = function(options){
+  return _performRequest(request.put, options);
 }
 
-module.exports.post = function(uri, body){
-  return new Promise(function(resolve, reject){
-    try{
-      var transaction = request
-        .post(uri)
-        .send(body);
-
-    transaction = tokenise(transaction, token);
-
-    transaction
-        .end(function(err, res){
-          handleResponse(err, res, resolve, reject);
-        })
-    } catch(err){
-      rejectWithError(err, reject);
-    }
-  })
+module.exports.post = function(options){
+  return _performRequest(request.post, options);
 }
 
-module.exports.delete = function(uri){
-  return new Promise(function(resolve,reject){
-    try{
-      var transaction = request
-        .delete(uri);
-
-      transaction = tokenise(transaction, token);
-
-      transaction
-        .end(function(err, res){
-          handleResponse(err, res, resolve, reject);
-        });
-    } catch(err) {
-      rejectWithError(err, reject);
-    }
-  });
+module.exports.delete = function(options){
+  return _performRequest(request.delete, options);
 }
