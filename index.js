@@ -13,7 +13,7 @@ function _handleResponse(err, res, resolve, reject){
   if(!response.success){
     reject({
       status: res.status,
-      res: reponse.res,
+      res: response.res,
       error: response.err
     });
   } else {
@@ -26,6 +26,20 @@ function _rejectWithError(err, reject){
     err:err,
     status:500
   });
+}
+
+function _applyAuth(transaction, auth){
+  if(auth.token){
+    return transaction
+      .set('x-access-token', auth.token);
+  }
+
+  if(auth.basic){
+    return transaction
+      .auth(auth.basic.username, auth.basic.password);
+  }
+
+  return transaction;
 }
 
 function _performRequest(method, options){
@@ -42,9 +56,8 @@ function _performRequest(method, options){
           })
       }
 
-      if(options.auth && options.auth.token){
-        transaction
-          .set('x-access-token', options.auth.token);
+      if(options.auth){
+        transaction = _applyAuth(transaction, options.auth);
       }
 
       transaction
