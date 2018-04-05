@@ -47,7 +47,8 @@ function _performRequest(method, options){
     try{
       var transaction = method(options.uri)
           .query(options.query || {})
-          .send(options.payload);
+          .send(options.payload)
+          .set(options.headers || {});
 
       if(options.timeout){
         transaction
