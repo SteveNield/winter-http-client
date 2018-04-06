@@ -3,22 +3,20 @@ var request = require('superagent'),
 
 function _handleResponse(err, res, resolve, reject){
   if(!res){
-    return reject({
-      status: 500,
-      error: err
-    });
+    return _rejectWithError(err, reject)
   }
 
-  var response = jsonTryParse(res.text);
-  if(!response.success){
-    reject({
-      status: res.status,
-      res: response.res,
-      error: response.err
-    });
-  } else {
-    resolve(response.res);
+  let parsed = jsonTryParse(res.text);
+
+  if(res.status === 200){
+    return resolve(parsed.success ? parsed.res : res.text);
   }
+
+  reject({
+    status: res.status,
+    res: parsed.res,
+    err: parsed.success ? parsed.res.err : ''
+  });
 }
 
 function _rejectWithError(err, reject){
