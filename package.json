@@ -1,6 +1,6 @@
 {
   "name": "winter-http-client",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Promisified HTTP client with robust response handling and error reporting.",
   "main": "index.js",
   "scripts": {

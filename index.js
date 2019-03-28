@@ -3,7 +3,7 @@ var request = require('superagent'),
 
 function _handleResponse(err, res, resolve, reject){
   if(!res){
-    return _rejectWithError(err, reject)
+    return _rejectWithError(err, reject);
   }
 
   let parsed = jsonTryParse(res.text);
@@ -52,7 +52,7 @@ function _performRequest(method, options){
         transaction
           .timeout({
             response: options.timeout
-          })
+          });
       }
 
       if(options.auth){
